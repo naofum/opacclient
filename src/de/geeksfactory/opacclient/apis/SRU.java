@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.SocketException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -175,10 +176,18 @@ public class SRU implements OpacApi {
 	@Override
 	public SearchRequestResult search(Bundle query) throws IOException,
 			NotReachableException {
-		String url = opac_url
-				+ "?version=1.1&operation=searchRetrieve&query=pica.tit%3D"
-				+ query.getString(OpacApi.KEY_SEARCH_QUERY_TITLE)
-				+ "&maximumRecords=" + FETCH_LENGTH + "&recordSchema=mods";
+		last_query = query;
+		return search(query, 1);
+	}
+
+	private SearchRequestResult search(Bundle query, int page)
+			throws IOException, NotReachableException {
+		String cql = "pica.tit="
+				+ query.getString(OpacApi.KEY_SEARCH_QUERY_TITLE);
+		String url = opac_url + "?version=1.1&operation=searchRetrieve&query="
+				+ URLEncoder.encode(cql, "UTF-8") + "&maximumRecords="
+				+ FETCH_LENGTH + "&recordSchema=mods&startRecord="
+				+ (FETCH_LENGTH * (page - 1) + 1);
 
 		HttpGet httpget = new HttpGet(url);
 		HttpResponse response = ahc.execute(httpget);
@@ -418,7 +427,7 @@ public class SRU implements OpacApi {
 				if (!parser.getNamespace().equals(XML_NAMESPACE_MODS)) {
 					skip(parser);
 				} else if (name.equals("nonSort")) {
-					mainTitle += readText(parser);
+					mainTitle += readText(parser) + " ";
 				} else if (name.equals("title")) {
 					mainTitle += readText(parser);
 				} else if (name.equals("subTitle")) {
@@ -442,7 +451,7 @@ public class SRU implements OpacApi {
 				throws IOException, XmlPullParserException {
 			parser.require(XmlPullParser.START_TAG, XML_NAMESPACE_MODS,
 					"typeOfResource");
-			String content = readText(parser).trim();
+			String content = readText(parser);
 			if (typeofresourceToType.containsKey(content)) {
 				return typeofresourceToType.get(content);
 			} else {
@@ -495,7 +504,7 @@ public class SRU implements OpacApi {
 	@Override
 	public SearchRequestResult searchGetPage(int page) throws IOException,
 			NotReachableException {
-		return null;
+		return search(last_query, page);
 	}
 
 	@Override
