@@ -23,6 +23,7 @@ import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.util.Xml;
 import de.geeksfactory.opacclient.NotReachableException;
 import de.geeksfactory.opacclient.networking.HTTPClient;
@@ -31,10 +32,10 @@ import de.geeksfactory.opacclient.objects.AccountData;
 import de.geeksfactory.opacclient.objects.DetailledItem;
 import de.geeksfactory.opacclient.objects.Filter;
 import de.geeksfactory.opacclient.objects.Filter.Option;
-import de.geeksfactory.opacclient.objects.SearchResult.MediaType;
 import de.geeksfactory.opacclient.objects.Library;
 import de.geeksfactory.opacclient.objects.SearchRequestResult;
 import de.geeksfactory.opacclient.objects.SearchResult;
+import de.geeksfactory.opacclient.objects.SearchResult.MediaType;
 import de.geeksfactory.opacclient.storage.MetaDataSource;
 
 /**
@@ -69,6 +70,7 @@ public class SRU implements OpacApi {
 	protected MetaDataSource metadata;
 	protected String last_error = "";
 	protected Bundle last_query;
+	protected CQLProvider cqlprovider = new DefaultCQLProvider();
 
 	protected static final int FETCH_LENGTH = 20;
 
@@ -88,7 +90,7 @@ public class SRU implements OpacApi {
 
 	@Override
 	public String[] getSearchFields() {
-		return new String[] { KEY_SEARCH_QUERY_TITLE };
+		return cqlprovider.getSearchFields();
 	}
 
 	@Override
@@ -157,6 +159,14 @@ public class SRU implements OpacApi {
 
 		try {
 			this.opac_url = data.getString("baseurl");
+			if (data.has("cqlprovider")) {
+				String ps = data.getString("cqlprovider");
+				if ("pica".equals(ps)) {
+					cqlprovider = new PicaCQLProvider();
+				} else {
+					cqlprovider = new DefaultCQLProvider();
+				}
+			}
 		} catch (JSONException e) {
 			ACRA.getErrorReporter().handleException(e);
 		}
@@ -180,14 +190,88 @@ public class SRU implements OpacApi {
 		return search(query, 1);
 	}
 
+	@Override
+	public SearchRequestResult searchGetPage(int page) throws IOException,
+			NotReachableException {
+		return search(last_query, page);
+	}
+
+	public interface CQLProvider {
+		public String cqlForSearch(Bundle query);
+
+		public String[] getSearchFields();
+	}
+
+	private class DefaultCQLProvider implements CQLProvider {
+		public String cqlForSearch(Bundle query) {
+			String cql;
+			cql = query.getString(OpacApi.KEY_SEARCH_QUERY_FREE);
+			return cql;
+		}
+
+		public String[] getSearchFields() {
+			return new String[] { KEY_SEARCH_QUERY_FREE };
+		}
+	}
+
+	private class PicaCQLProvider implements CQLProvider {
+		public String cqlForSearch(Bundle query) {
+			List<String> args = new ArrayList<String>();
+
+			if (query.get(OpacApi.KEY_SEARCH_QUERY_FREE) != null && !"".equals(query.get(OpacApi.KEY_SEARCH_QUERY_FREE))) {
+				args.add("\"" + query.get(OpacApi.KEY_SEARCH_QUERY_FREE)
+						+ "\"");
+			}
+			if (query.get(OpacApi.KEY_SEARCH_QUERY_TITLE) != null && !"".equals(query.get(OpacApi.KEY_SEARCH_QUERY_TITLE))) {
+				args.add("pica.tit = \""
+						+ query.get(OpacApi.KEY_SEARCH_QUERY_TITLE) + "\"");
+			}
+			if (query.get(OpacApi.KEY_SEARCH_QUERY_AUTHOR) != null && !"".equals(query.get(OpacApi.KEY_SEARCH_QUERY_AUTHOR))) {
+				args.add("pica.per = \""
+						+ query.get(OpacApi.KEY_SEARCH_QUERY_AUTHOR) + "\"");
+			}
+			if (query.get(OpacApi.KEY_SEARCH_QUERY_KEYWORDA) != null && !"".equals(query.get(OpacApi.KEY_SEARCH_QUERY_KEYWORDA))) {
+				args.add("pica.slw = \""
+						+ query.get(OpacApi.KEY_SEARCH_QUERY_KEYWORDA) + "\"");
+			}
+			if (query.get(OpacApi.KEY_SEARCH_QUERY_PUBLISHER) != null && !"".equals(query.get(OpacApi.KEY_SEARCH_QUERY_PUBLISHER))) {
+				args.add("pica.pub = \""
+						+ query.get(OpacApi.KEY_SEARCH_QUERY_PUBLISHER) + "\"");
+			}
+			if (query.get(OpacApi.KEY_SEARCH_QUERY_ISBN) != null && !"".equals(query.get(OpacApi.KEY_SEARCH_QUERY_ISBN))) {
+				args.add("pica.isb = \""
+						+ query.get(OpacApi.KEY_SEARCH_QUERY_ISBN) + "\"");
+			}
+			if (query.get(OpacApi.KEY_SEARCH_QUERY_YEAR) != null && !"".equals(query.get(OpacApi.KEY_SEARCH_QUERY_YEAR))) {
+				args.add("pica.jah = \""
+						+ query.get(OpacApi.KEY_SEARCH_QUERY_YEAR) + "\"");
+			}
+			if (query.get(OpacApi.KEY_SEARCH_QUERY_SYSTEM) != null && !"".equals(query.get(OpacApi.KEY_SEARCH_QUERY_SYSTEM))) {
+				args.add("pica.sgn = \""
+						+ query.get(OpacApi.KEY_SEARCH_QUERY_SYSTEM) + "\"");
+			}
+
+			return StringUtils.join(args, " and ");
+		}
+
+		public String[] getSearchFields() {
+			// z.B. http://opac.ub.uni-weimar.de/DB=1/XML=1.0/IKTLIST
+			return new String[] { KEY_SEARCH_QUERY_FREE,
+					KEY_SEARCH_QUERY_TITLE, KEY_SEARCH_QUERY_AUTHOR,
+					KEY_SEARCH_QUERY_KEYWORDA, KEY_SEARCH_QUERY_PUBLISHER,
+					KEY_SEARCH_QUERY_ISBN, KEY_SEARCH_QUERY_YEAR,
+					KEY_SEARCH_QUERY_SYSTEM };
+		}
+	}
+
 	private SearchRequestResult search(Bundle query, int page)
 			throws IOException, NotReachableException {
-		String cql = "pica.tit="
-				+ query.getString(OpacApi.KEY_SEARCH_QUERY_TITLE);
+		String cql = cqlprovider.cqlForSearch(query);
 		String url = opac_url + "?version=1.1&operation=searchRetrieve&query="
 				+ URLEncoder.encode(cql, "UTF-8") + "&maximumRecords="
 				+ FETCH_LENGTH + "&recordSchema=mods&startRecord="
 				+ (FETCH_LENGTH * (page - 1) + 1);
+		Log.i("url", url);
 
 		HttpGet httpget = new HttpGet(url);
 		HttpResponse response = ahc.execute(httpget);
@@ -414,8 +498,6 @@ public class SRU implements OpacApi {
 			parser.require(XmlPullParser.START_TAG, XML_NAMESPACE_MODS,
 					"titleInfo");
 
-			List<String> nameParts = new ArrayList<String>();
-
 			String mainTitle = "";
 			String subTitle = "";
 
@@ -499,12 +581,6 @@ public class SRU implements OpacApi {
 				}
 			}
 		}
-	}
-
-	@Override
-	public SearchRequestResult searchGetPage(int page) throws IOException,
-			NotReachableException {
-		return search(last_query, page);
 	}
 
 	@Override

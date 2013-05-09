@@ -3,7 +3,8 @@
     "city": "Weimar", 
     "data": {
         "baseurl": "http://sru.gbv.de/opac-de-wim2", 
-        "information": "http://www.uni-weimar.de/de/universitaet/struktur/zentrale-einrichtungen/universitaetsbibliothek/"
+        "information": "http://www.uni-weimar.de/de/universitaet/struktur/zentrale-einrichtungen/universitaetsbibliothek/",
+        "cqlprovider": "pica"
     }, 
     "geo": [
         50.979444,
