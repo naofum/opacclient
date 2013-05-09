@@ -20,6 +20,7 @@ import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.res.AssetManager;
 import android.net.ConnectivityManager;
@@ -31,6 +32,7 @@ import de.geeksfactory.opacclient.apis.BiBer1992;
 import de.geeksfactory.opacclient.apis.Bibliotheca;
 import de.geeksfactory.opacclient.apis.OpacApi;
 import de.geeksfactory.opacclient.apis.SISIS;
+import de.geeksfactory.opacclient.apis.SRU;
 import de.geeksfactory.opacclient.apis.Zones22;
 import de.geeksfactory.opacclient.frontend.NavigationFragment;
 import de.geeksfactory.opacclient.frontend.SearchResultsActivity;
@@ -104,6 +106,8 @@ public class OpacClient extends Application {
 			newApiInstance = new Zones22();
 		else if (lib.getApi().equals("biber1992"))
 			newApiInstance = new BiBer1992();
+		else if (lib.getApi().equals("sru"))
+			newApiInstance = new SRU();
 		else
 			return null;
 
@@ -158,8 +162,10 @@ public class OpacClient extends Application {
 		sp.edit().putLong(OpacClient.PREF_SELECTED_ACCOUNT, id).commit();
 		resetCache();
 		if (getLibrary() != null) {
-			ACRA.getErrorReporter().putCustomData("library",
-					getLibrary().getIdent());
+			if (!isDebug()) {
+				ACRA.getErrorReporter().putCustomData("library",
+						getLibrary().getIdent());
+			}
 		}
 	}
 
@@ -237,15 +243,17 @@ public class OpacClient extends Application {
 		super.onCreate();
 		sp = PreferenceManager.getDefaultSharedPreferences(this);
 
-		ACRAConfiguration config = ACRA.getNewDefaultConfig(this);
-		config.setResToastText(R.string.crash_toast_text);
-		config.setResDialogText(R.string.crash_dialog_text);
-		ACRA.setConfig(config);
-		ACRA.init(this);
+		if (!isDebug()) {
+			ACRAConfiguration config = ACRA.getNewDefaultConfig(this);
+			config.setResToastText(R.string.crash_toast_text);
+			config.setResDialogText(R.string.crash_dialog_text);
+			ACRA.setConfig(config);
+			ACRA.init(this);
 
-		if (getLibrary() != null) {
-			ACRA.getErrorReporter().putCustomData("library",
-					getLibrary().getIdent());
+			if (getLibrary() != null) {
+				ACRA.getErrorReporter().putCustomData("library",
+						getLibrary().getIdent());
+			}
 		}
 
 		OpacClient.context = getApplicationContext();
@@ -256,6 +264,10 @@ public class OpacClient extends Application {
 		} catch (NameNotFoundException e) {
 			e.printStackTrace();
 		}
+	}
+
+	public boolean isDebug() {
+		return ((getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) > 0);
 	}
 
 }

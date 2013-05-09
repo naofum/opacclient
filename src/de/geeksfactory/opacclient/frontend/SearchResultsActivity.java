@@ -132,7 +132,10 @@ public class SearchResultsActivity extends OpacActivity {
 				exception = e;
 			} catch (Exception e) {
 				exception = e;
-				ACRA.getErrorReporter().handleException(e);
+				if (!app.isDebug())
+					ACRA.getErrorReporter().handleException(e);
+				else
+					e.printStackTrace();
 				success = false;
 			}
 
