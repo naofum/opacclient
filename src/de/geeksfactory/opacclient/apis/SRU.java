@@ -22,7 +22,6 @@ import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
 import android.os.Bundle;
-import android.util.Log;
 import android.util.Xml;
 import de.geeksfactory.opacclient.NotReachableException;
 import de.geeksfactory.opacclient.networking.HTTPClient;
@@ -31,6 +30,7 @@ import de.geeksfactory.opacclient.objects.AccountData;
 import de.geeksfactory.opacclient.objects.DetailledItem;
 import de.geeksfactory.opacclient.objects.Filter;
 import de.geeksfactory.opacclient.objects.Filter.Option;
+import de.geeksfactory.opacclient.objects.SearchResult.MediaType;
 import de.geeksfactory.opacclient.objects.Library;
 import de.geeksfactory.opacclient.objects.SearchRequestResult;
 import de.geeksfactory.opacclient.objects.SearchResult;
@@ -42,11 +42,32 @@ import de.geeksfactory.opacclient.storage.MetaDataSource;
  */
 public class SRU implements OpacApi {
 
+	protected static HashMap<String, MediaType> typeofresourceToType = new HashMap<String, MediaType>();
+
+	static {
+		typeofresourceToType.put("text", MediaType.BOOK);
+		typeofresourceToType.put("cartographic", MediaType.MAP);
+		typeofresourceToType.put("notated music", MediaType.SCORE_MUSIC);
+		typeofresourceToType.put("sound recording-musical", MediaType.CD_MUSIC);
+		typeofresourceToType.put("sound recording-nonmusical", MediaType.CD);
+		typeofresourceToType.put("sound recording", MediaType.CD);
+		typeofresourceToType.put("still image", MediaType.ART);
+		typeofresourceToType.put("moving image", MediaType.MOVIE);
+		typeofresourceToType.put("three dimensional object", MediaType.UNKNOWN);
+		typeofresourceToType.put("software, multimedia", MediaType.CD_SOFTWARE);
+		typeofresourceToType.put("mixed material", MediaType.PACKAGE);
+	}
+
+	// Important URLs
+	// http://sru.gbv.de/opac-de-wim2?version=1.1&operation=searchRetrieve&query=pica.tit%3Dentwicklung&maximumRecords=10&recordSchema=mods
+	// http://www.loc.gov/standards/mods/mods-outline.html#titleInfo
+
 	protected String opac_url = "";
 	protected JSONObject data;
 	protected DefaultHttpClient ahc;
 	protected MetaDataSource metadata;
 	protected String last_error = "";
+	protected Bundle last_query;
 
 	protected static final int FETCH_LENGTH = 20;
 
@@ -253,7 +274,6 @@ public class SRU implements OpacApi {
 					skip(parser);
 				}
 			}
-			Log.i("end", parser.getName() + "");
 			return records;
 		}
 
@@ -288,7 +308,6 @@ public class SRU implements OpacApi {
 					skip(parser);
 				}
 			}
-			Log.i("end", parser.getName() + "");
 			return entry;
 		}
 
@@ -327,6 +346,8 @@ public class SRU implements OpacApi {
 					skip(parser);
 				} else if (name.equals("titleInfo")) {
 					title = readModsTitleInfo(parser);
+				} else if (name.equals("typeOfResource")) {
+					result.setType(readModsTypeOfResource(parser));
 				} else if (name.equals("name")) {
 					String usage = parser.getAttributeValue(null, "usage");
 					String _name = readModsName(parser);
@@ -414,6 +435,18 @@ public class SRU implements OpacApi {
 				return "<b>" + mainTitle + "</b><br />" + subTitle;
 			} else {
 				return "<b>" + mainTitle + "</b>";
+			}
+		}
+
+		private MediaType readModsTypeOfResource(XmlPullParser parser)
+				throws IOException, XmlPullParserException {
+			parser.require(XmlPullParser.START_TAG, XML_NAMESPACE_MODS,
+					"typeOfResource");
+			String content = readText(parser).trim();
+			if (typeofresourceToType.containsKey(content)) {
+				return typeofresourceToType.get(content);
+			} else {
+				return MediaType.NONE;
 			}
 		}
 
