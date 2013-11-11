@@ -240,7 +240,8 @@ public class SearchResultDetailsActivity extends OpacActivity {
 								public void onClick(DialogInterface dialog,
 										int id) {
 									adialog.dismiss();
-									MainPreferenceActivity.openAccountList(SearchResultDetailsActivity.this);
+									MainPreferenceActivity
+											.openAccountList(SearchResultDetailsActivity.this);
 								}
 							});
 			adialog = builder.create();
@@ -421,7 +422,8 @@ public class SearchResultDetailsActivity extends OpacActivity {
 
 		if (result.getDetails().size() == 1
 				&& result.getDetails().get(0).length == 1) {
-			((RelativeLayout) view.findViewById(R.id.rlConfirm)).removeView(table);
+			((RelativeLayout) view.findViewById(R.id.rlConfirm))
+					.removeView(table);
 			TextView tv = new TextView(this);
 			tv.setText(result.getDetails().get(0)[0]);
 			tv.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT,
@@ -764,10 +766,15 @@ public class SearchResultDetailsActivity extends OpacActivity {
 						null);
 				((TextView) v.findViewById(R.id.tvDesc)).setText(detail
 						.getDesc());
-				((TextView) v.findViewById(R.id.tvContent)).setText(detail
-						.getContent());
-				Linkify.addLinks((TextView) v.findViewById(R.id.tvContent),
-						Linkify.WEB_URLS);
+				if (detail.isHtml()) {
+					((TextView) v.findViewById(R.id.tvContent)).setText(Html
+							.fromHtml(detail.getContent()));
+				} else {
+					((TextView) v.findViewById(R.id.tvContent)).setText(detail
+							.getContent());
+					Linkify.addLinks((TextView) v.findViewById(R.id.tvContent),
+							Linkify.WEB_URLS);
+				}
 				llDetails.addView(v);
 			}
 
@@ -1257,14 +1264,6 @@ public class SearchResultDetailsActivity extends OpacActivity {
 				// Add data to the intent, the receiving app will decide
 				// what to do with it.
 				intent.putExtra(Intent.EXTRA_SUBJECT, title);
-
-				String t = title;
-				try {
-					bib = java.net.URLEncoder.encode(app.getLibrary()
-							.getIdent(), "UTF-8");
-					t = java.net.URLEncoder.encode(t, "UTF-8");
-				} catch (UnsupportedEncodingException e) {
-				}
 
 				String shareUrl = app.getApi().getShareUrl(id, title);
 				if (shareUrl != null) {
