@@ -201,7 +201,7 @@ public interface OpacApi {
 	public static final String KEY_SEARCH_QUERY_BARCODE = "barcode";
 
 	/**
-	 * Item location in library. Currently  not in use.
+	 * Item location in library. Currently not in use.
 	 * 
 	 * Bundle key for {@link #search(Bundle)} and possible value for
 	 * {@link #getSearchFields()}.
@@ -545,6 +545,11 @@ public interface OpacApi {
 	 * Get details for the item at <code>position</code> from last
 	 * {@link #search} or {@link #searchGetPage} call.
 	 * 
+	 * We generally prefer {@link #getResultById(String, String)}, so if you
+	 * implement <code>getResultById</code> <strong>AND</strong> <em>every</em>
+	 * search result of your driver has an id set, you can omit this method
+	 * (respectively, return null).
+	 * 
 	 * This function is always called from a background thread, you can use
 	 * blocking network operations in it.
 	 * 
@@ -603,7 +608,7 @@ public interface OpacApi {
 		public ReservationResult(Status status) {
 			super(status);
 		}
-		
+
 		public ReservationResult(Status status, String message) {
 			super(status, message);
 		}
@@ -618,7 +623,7 @@ public interface OpacApi {
 		public ProlongResult(Status status) {
 			super(status);
 		}
-		
+
 		public ProlongResult(Status status, String message) {
 			super(status, message);
 		}
