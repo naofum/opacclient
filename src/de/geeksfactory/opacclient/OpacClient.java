@@ -51,6 +51,7 @@ import android.util.Log;
 import android.preference.PreferenceManager;
 import de.geeksfactory.opacclient.apis.BiBer1992;
 import de.geeksfactory.opacclient.apis.Bibliotheca;
+import de.geeksfactory.opacclient.apis.Heidi;
 import de.geeksfactory.opacclient.apis.IOpac;
 import de.geeksfactory.opacclient.apis.OpacApi;
 import de.geeksfactory.opacclient.apis.Pica;
@@ -137,6 +138,8 @@ public class OpacClient extends Application {
 			newApiInstance = new Pica();
 		else if (lib.getApi().equals("iopac"))
 			newApiInstance = new IOpac();
+		else if (lib.getApi().equals("heidi"))
+			newApiInstance = new Heidi();
 		else
 			return null;
 
