@@ -26,14 +26,13 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import org.acra.ACRA;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.CookieStore;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.utils.URLEncodedUtils;
-import org.apache.http.cookie.Cookie;
 import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.cookie.BasicClientCookie;
 import org.apache.http.message.BasicNameValuePair;
@@ -394,7 +393,7 @@ public class Heidi extends BaseApi implements OpacApi {
 
 		Elements table = doc.select(".titelsatz tr");
 		for (Element tr : table) {
-			if(tr.select("th").size() == 0 || tr.select("td").size() == 0)
+			if (tr.select("th").size() == 0 || tr.select("td").size() == 0)
 				continue;
 			String d = tr.select("th").first().text();
 			String c = tr.select("td").first().text();
@@ -474,8 +473,52 @@ public class Heidi extends BaseApi implements OpacApi {
 	@Override
 	public AccountData account(Account account) throws IOException,
 			JSONException {
-		// TODO Auto-generated method stub
-		return null;
+		if (sessid == null)
+			start();
+
+		String html = httpGet(opac_url + "/konto.cgi?sess=" + sessid, ENCODING);
+		Document doc = Jsoup.parse(html);
+		if (doc.select("input[name=pw]").size() > 0) {
+			// Login first
+			ArrayList<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>();
+			nameValuePairs.add(new BasicNameValuePair("id", account.getName()));
+			nameValuePairs.add(new BasicNameValuePair("pw", account
+					.getPassword()));
+			nameValuePairs.add(new BasicNameValuePair("weiter", "konto.cgi"));
+			nameValuePairs.add(new BasicNameValuePair("sess", sessid));
+			html = httpPost(opac_url + "/login.cgi", new UrlEncodedFormEntity(
+					nameValuePairs), ENCODING);
+			doc = Jsoup.parse(html);
+			if (doc.select("form .meld").size() > 0) {
+				last_error = doc.select("form .meld").first().text();
+				return null;
+			}
+		}
+
+		if (doc.select(".kontokurz").size() == 0)
+			return null;
+
+		AccountData res = new AccountData(account.getId());
+		int num_lends = -1;
+		int num_orders = -1;
+		int num_res = -1;
+		for (Element td : doc.select(".kontokurz td")) {
+			String text = td.text().trim();
+			if (text.contains("Ausleihen")) {
+				num_lends = Integer.parseInt(text.replaceAll(
+						"Anzahl Ausleihen: ([0-9]+)", "$1"));
+			} else if (text.contains("Bestellungen")) {
+				num_orders = Integer.parseInt(text.replaceAll(
+						"Anzahl Bestellungen: ([0-9]+)", "$1"));
+			} else if (text.contains("Vormerkungen")) {
+				num_res = Integer.parseInt(text.replaceAll(
+						"Anzahl Vormerkungen: ([0-9]+)", "$1"));
+			} else if (text.contains("Offene")) {
+				res.setPendingFees(text.replaceAll(
+						"Offene Geb.hren: ([0-9,]+ €)", "$1"));
+			}
+		}
+		return res;
 	}
 
 	@Override
@@ -495,7 +538,7 @@ public class Heidi extends BaseApi implements OpacApi {
 
 	@Override
 	public boolean isAccountSupported(Library library) {
-		return false; // TODO
+		return true;
 	}
 
 	@Override
