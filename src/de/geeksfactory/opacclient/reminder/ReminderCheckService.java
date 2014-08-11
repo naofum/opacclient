@@ -282,17 +282,19 @@ public class ReminderCheckService extends Service {
 			// We need to use different request codes so that the PendingIntents aren't overwritten
 			int requestCode = OpacClient.REMINDER_REQ_CODE_MIN;
 			
-			for (Entry<Long, ArrayList<HashMap<String, String>>> entry:expiringBooks.entrySet()) {
-				Intent i = new Intent(ReminderCheckService.this,
-						ReminderCheckService.class);
-				i.setAction(ACTION_NOTIFY);
-				i.putExtra("media", entry.getValue());
-				PendingIntent sender = PendingIntent.getService(
-						ReminderCheckService.this, requestCode,
-						i, PendingIntent.FLAG_UPDATE_CURRENT);
-				am.cancel(sender);
-				am.set(AlarmManager.RTC_WAKEUP, entry.getKey() - warning, sender);
-				Log.d("opac", entry.getValue().toString());
+			if(!exception) { // TODO: Is this needed to not overwrite the alarms when an account didn't work correctly?
+				for (Entry<Long, ArrayList<HashMap<String, String>>> entry:expiringBooks.entrySet()) {
+					Intent i = new Intent(ReminderCheckService.this,
+							ReminderCheckService.class);
+					i.setAction(ACTION_NOTIFY);
+					i.putExtra("media", entry.getValue());
+					PendingIntent sender = PendingIntent.getService(
+							ReminderCheckService.this, requestCode,
+							i, PendingIntent.FLAG_UPDATE_CURRENT);
+					am.cancel(sender);
+					am.set(AlarmManager.RTC_WAKEUP, entry.getKey() - warning, sender);
+					Log.d("opac", entry.getValue().toString());
+				}
 			}
 			
 //			return new Object[] { expired_new, expired_total, notified, first,
