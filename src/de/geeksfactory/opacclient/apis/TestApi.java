@@ -99,6 +99,7 @@ public class TestApi extends BaseApi implements OpacApi {
 		
 		SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy", Locale.GERMAN);
 		Calendar cal = Calendar.getInstance();
+		cal.setTimeInMillis(1407794400000l);
 		
 		Map<String, String> media1 = new HashMap<String, String>();
 		media1.put(AccountData.KEY_LENT_AUTHOR, "Mustermann, Max");
@@ -109,7 +110,7 @@ public class TestApi extends BaseApi implements OpacApi {
 		media1.put(AccountData.KEY_LENT_STATUS, "Status");
 		lent.add(media1);
 		
-		cal.add(Calendar.DATE, 2);
+		cal.add(Calendar.DATE, 3);
 		
 		Map<String, String> media2 = new HashMap<String, String>();
 		media2.put(AccountData.KEY_LENT_AUTHOR, "Mustermann, Martina");

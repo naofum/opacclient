@@ -80,6 +80,7 @@ public class OpacClient extends Application {
 
 	public static int NOTIF_ID = 1;
 	public static int BROADCAST_REMINDER = 2;
+	public static int REMINDER_REQ_CODE_MIN = 500;
 	public static final String PREF_SELECTED_ACCOUNT = "selectedAccount";
 	public static final String PREF_HOME_BRANCH_PREFIX = "homeBranch_";
 

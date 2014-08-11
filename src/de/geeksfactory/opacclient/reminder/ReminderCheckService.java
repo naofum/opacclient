@@ -24,12 +24,16 @@ package de.geeksfactory.opacclient.reminder;
 import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.net.SocketException;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.acra.ACRA;
 
+import android.annotation.SuppressLint;
 import android.app.AlarmManager;
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -59,21 +63,79 @@ public class ReminderCheckService extends Service {
 
 	boolean notification_on = false;
 	public static final String ACTION_SNOOZE = "snooze";
+	public static final String ACTION_NOTIFY = "notify";
 
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startid) {
 		if(ACTION_SNOOZE.equals(intent.getAction())) {
+			// Cancel the notification
+			NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+			mNotificationManager.cancel(OpacClient.NOTIF_ID);
+			
 			Intent i = new Intent(ReminderCheckService.this,
-					ReminderAlarmReceiver.class);
-			PendingIntent sender = PendingIntent.getBroadcast(
-					ReminderCheckService.this, OpacClient.BROADCAST_REMINDER,
+					ReminderCheckService.class);
+			i.setAction(ACTION_NOTIFY);
+			i.putExtra("media", intent.getSerializableExtra("media"));
+			PendingIntent sender = PendingIntent.getService(
+					ReminderCheckService.this, 0,
 					i, PendingIntent.FLAG_UPDATE_CURRENT);
 			AlarmManager am = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
 
-			Log.i("ReminderCheckService", "Opac App Service: Quick repeat");
-			// Run again in 1 day
+			Log.i("ReminderCheckService", "Opac App Service: Snooze");
+			// Notify again in 1 day
 			am.set(AlarmManager.RTC_WAKEUP, System.currentTimeMillis()
 					+ (1000 * 3600 * 24), sender);
+		} else if (ACTION_NOTIFY.equals(intent.getAction())) {
+			@SuppressWarnings("unchecked")
+			ArrayList<HashMap<String, String>> media = (ArrayList<HashMap<String, String>>) intent.getSerializableExtra("media");
+			SharedPreferences sp = PreferenceManager
+					.getDefaultSharedPreferences(ReminderCheckService.this);
+			notification_on = sp.getBoolean("notification_service", false);
+
+			if (notification_on) {
+				NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+				NotificationCompat.Builder nb = new NotificationCompat.Builder(
+						ReminderCheckService.this);
+				nb.setContentInfo(getString(R.string.notif_ticker,
+						media.size()));
+				nb.setContentTitle(getString(R.string.notif_title));
+				nb.setContentText(getString(R.string.notif_ticker,
+						media.size()));
+				nb.setTicker(getString(R.string.notif_ticker, media.size()));
+				nb.setSmallIcon(R.drawable.ic_stat_notification);
+				nb.setWhen(Long.parseLong(media.get(0).get(AccountData.KEY_LENT_DEADLINE_TIMESTAMP)));
+				nb.setNumber(media.size());
+				nb.setSound(null);
+				
+				Intent snoozeIntent = new Intent(ReminderCheckService.this, ReminderCheckService.class);
+				snoozeIntent.putExtra("media", media);
+				snoozeIntent.setAction(ACTION_SNOOZE);
+				PendingIntent piSnooze = PendingIntent.getService(ReminderCheckService.this, 0, snoozeIntent, 0);
+				nb.addAction(R.drawable.ic_action_alarms, getResources().getText(R.string.snooze), piSnooze);
+				nb.setDeleteIntent(piSnooze);
+
+				Intent notificationIntent = new Intent(
+						ReminderCheckService.this,
+						((OpacClient) getApplication()).getMainActivity());
+				notificationIntent.putExtra("fragment", "account");
+				notificationIntent.putExtra("media", media);
+//TODO:				notificationIntent.putExtra("notifications", notified);
+//				if (affected_accounts > 1) {
+//					// If there are notifications for more than one account,
+//					// account
+//					// menu should be opened
+//					notificationIntent.putExtra("showmenu", true);
+//				}
+//				notificationIntent.putExtra("account", first_affected_account);
+				PendingIntent contentIntent = PendingIntent.getActivity(
+						ReminderCheckService.this, 0, notificationIntent, 0);
+				nb.setContentIntent(contentIntent);
+				nb.setAutoCancel(true);
+
+				Notification notification = nb.build();
+				mNotificationManager.notify(OpacClient.NOTIF_ID, notification);
+			}
 		} else {	
 			SharedPreferences sp = PreferenceManager
 					.getDefaultSharedPreferences(ReminderCheckService.this);
@@ -125,6 +187,7 @@ public class ReminderCheckService extends Service {
 
 		private boolean exception = false;
 
+		@SuppressLint("UseSparseArrays")
 		@Override
 		protected Object[] doInBackground(Object... params) {
 			AccountDataSource data = new AccountDataSource(
@@ -144,12 +207,9 @@ public class ReminderCheckService extends Service {
 			long warning = Long.decode(sp.getString("notification_warning",
 					"367200000"));
 			// long warning = 1000 * 3600 * 24 * 90;
-			long expired_new = 0;
-			long expired_total = 0;
-			long affected_accounts = 0;
-			long first = 0;
-			long first_affected_account = 0;
-			Bundle notified = new Bundle();
+			
+			//Saves times with the list of corresponding expiring books
+			HashMap<Long, ArrayList<HashMap<String, String>>> expiringBooks = new HashMap<Long, ArrayList<HashMap<String, String>>>();
 
 			OpacClient app = (OpacClient) getApplication();
 			for (Account account : accounts) {
@@ -169,7 +229,7 @@ public class ReminderCheckService extends Service {
 
 					data.storeCachedAccountData(account, res);
 
-					int this_account = 0;
+//					int this_account = 0;
 
 					for (Map<String, String> item : res.getLent()) {
 						if (item.containsKey(AccountData.KEY_LENT_DOWNLOAD)) {
@@ -183,27 +243,19 @@ public class ReminderCheckService extends Service {
 							long expiring = Long
 									.parseLong(item
 											.get(AccountData.KEY_LENT_DEADLINE_TIMESTAMP));
-							if ((expiring - now) < warning) {
-								expired_total++;
-								if (!data.notificationIsSent(account.getId(),
-										expiring)) {
-									expired_new++;
+							if ((expiring - now) >= warning) {
+								// This book has not expired yet, save it to schedule
+								// a notification for when it expires
+								if(!expiringBooks.containsKey(expiring)) {
+									expiringBooks.put(expiring, new ArrayList<HashMap<String, String>>());
 								}
-								this_account++;
-							}
-							notified.putLongArray(account.getId() + ""
-									+ expiring, new long[] { account.getId(),
-									expiring });
-							if (expiring < first || first == 0) {
-								first = expiring;
+								expiringBooks.get(expiring).add(new HashMap<String, String>(item));
+							} else {
+								// This book has already exceeded the notification threshold.
+								// Do nothing, because the user should already have been notified and will
+								// be again if the notification was dismissed or the snooze button pressed
 							}
 						}
-					}
-
-					if (this_account > 0) {
-						affected_accounts++;
-						if (first_affected_account == 0)
-							first_affected_account = account.getId();
 					}
 
 				} catch (SocketException e) {
@@ -222,8 +274,30 @@ public class ReminderCheckService extends Service {
 				}
 			}
 			data.close();
-			return new Object[] { expired_new, expired_total, notified, first,
-					affected_accounts, first_affected_account };
+			
+			
+			// Schedule notifications for all the books that haven't expired yet
+			AlarmManager am = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+			
+			// We need to use different request codes so that the PendingIntents aren't overwritten
+			int requestCode = OpacClient.REMINDER_REQ_CODE_MIN;
+			
+			for (Entry<Long, ArrayList<HashMap<String, String>>> entry:expiringBooks.entrySet()) {
+				Intent i = new Intent(ReminderCheckService.this,
+						ReminderCheckService.class);
+				i.setAction(ACTION_NOTIFY);
+				i.putExtra("media", entry.getValue());
+				PendingIntent sender = PendingIntent.getService(
+						ReminderCheckService.this, requestCode,
+						i, PendingIntent.FLAG_UPDATE_CURRENT);
+				am.cancel(sender);
+				am.set(AlarmManager.RTC_WAKEUP, entry.getKey() - warning, sender);
+				Log.d("opac", entry.getValue().toString());
+			}
+			
+//			return new Object[] { expired_new, expired_total, notified, first,
+//					affected_accounts, first_affected_account };
+			return null;
 		}
 
 		@Override
@@ -254,55 +328,8 @@ public class ReminderCheckService extends Service {
 			if (expired_new == 0)
 				return;
 
-			SharedPreferences sp = PreferenceManager
-					.getDefaultSharedPreferences(ReminderCheckService.this);
-			notification_on = sp.getBoolean("notification_service", false);
-
-			if (notification_on) {
-				NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-
-				NotificationCompat.Builder nb = new NotificationCompat.Builder(
-						ReminderCheckService.this);
-				nb.setContentInfo(getString(R.string.notif_ticker,
-						expired_total));
-				nb.setContentTitle(getString(R.string.notif_title));
-				nb.setContentText(getString(R.string.notif_ticker,
-						expired_total));
-				nb.setTicker(getString(R.string.notif_ticker, expired_total));
-				nb.setSmallIcon(R.drawable.ic_stat_notification);
-				nb.setWhen(first);
-				nb.setNumber((int) expired_new);
-				nb.setSound(null);
-				
-				Intent snoozeIntent = new Intent(ReminderCheckService.this, ReminderCheckService.class);
-				snoozeIntent.setAction(ACTION_SNOOZE);
-				PendingIntent piSnooze = PendingIntent.getService(ReminderCheckService.this, 0, snoozeIntent, 0);
-				nb.addAction(R.drawable.ic_action_alarms, getResources().getText(R.string.snooze), piSnooze);
-
-				Intent notificationIntent = new Intent(
-						ReminderCheckService.this,
-						((OpacClient) getApplication()).getMainActivity());
-				notificationIntent.putExtra("fragment", "account");
-				notificationIntent.putExtra("notifications", notified);
-				if (affected_accounts > 1) {
-					// If there are notifications for more than one account,
-					// account
-					// menu should be opened
-					notificationIntent.putExtra("showmenu", true);
-				}
-				notificationIntent.putExtra("account", first_affected_account);
-				PendingIntent contentIntent = PendingIntent.getActivity(
-						ReminderCheckService.this, 0, notificationIntent, 0);
-				nb.setContentIntent(contentIntent);
-				nb.setAutoCancel(true);
-
-				Notification notification = nb.build();
-				mNotificationManager.notify(OpacClient.NOTIF_ID, notification);
-			}
-
 			stopSelf();
 		}
 
 	}
-
 }
