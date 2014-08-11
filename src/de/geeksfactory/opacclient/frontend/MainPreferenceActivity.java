@@ -97,6 +97,16 @@ public class MainPreferenceActivity extends OpacPreferenceActivity {
 				return false;
 			}
 		});
+		
+		Preference service = findPreference("run_service");
+		service.setOnPreferenceClickListener(new OnPreferenceClickListener() {
+			@Override
+			public boolean onPreferenceClick(Preference arg0) {
+				Intent i = new Intent(MainPreferenceActivity.this, ReminderCheckService.class);
+				MainPreferenceActivity.this.startService(i);
+				return false;
+			}			
+		});
 	}
 
 	@Override

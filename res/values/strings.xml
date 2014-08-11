@@ -265,5 +265,8 @@
     <string name="snooze">Morgen erneut erinnern</string>
     <string name="setting_test_library">Test-Bibliothek</string>
     <string name="setting_test_library_desc">Zeigt eine simulierte Bibliothek an, die zum Testen benötigt wird</string>
-
+    <string name="setting_meta_clear">Cache leeren</string>
+	<string name="setting_meta_clear_desc">Löscht auf dem Handy zwischengespeicherten Zweigstellen, Metadaten, etc.</string>
+	<string name="setting_run_service">Benachrichtigungsdienst jetzt starten</string>
+	<string name="setting_run_service_desc">Startet den Dienst, der im Hintergrund die Medien abruft, um Benachrichtigungen anzuzeigen</string>
 </resources>
