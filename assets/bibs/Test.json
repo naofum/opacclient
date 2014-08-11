@@ -1,0 +1,15 @@
+{
+    "api": "test", 
+    "city": "Test", 
+    "country": "Test", 
+    "data": {
+        
+    }, 
+    "geo": [
+        0.0, 
+        0.0
+    ], 
+    "state": "Test", 
+    "support": "Konto", 
+    "title": "Testbibliothek"
+}

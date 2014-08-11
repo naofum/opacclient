@@ -60,6 +60,7 @@ import de.geeksfactory.opacclient.apis.OpacApi;
 import de.geeksfactory.opacclient.apis.Pica;
 import de.geeksfactory.opacclient.apis.SISIS;
 import de.geeksfactory.opacclient.apis.SRU;
+import de.geeksfactory.opacclient.apis.TestApi;
 import de.geeksfactory.opacclient.apis.WebOpacNet;
 import de.geeksfactory.opacclient.apis.Zones22;
 import de.geeksfactory.opacclient.frontend.AccountListActivity;
@@ -137,7 +138,7 @@ public class OpacClient extends Application {
 			SocketException, IOException, NotReachableException {
 		OpacApi newApiInstance = null;
 		if (lib.getApi().equals("bond26") || lib.getApi().equals("bibliotheca"))
-			// Backwardscompatibility
+			// Backwards compatibility
 			newApiInstance = new Bibliotheca();
 		else if (lib.getApi().equals("oclc2011")
 				|| lib.getApi().equals("sisis"))
@@ -157,6 +158,8 @@ public class OpacClient extends Application {
 			newApiInstance = new SRU();
 		else if (lib.getApi().equals("webopac.net"))
 			newApiInstance = new WebOpacNet();
+		else if (lib.getApi().equals("test"))
+			newApiInstance = new TestApi();
 		else
 			return null;
 
@@ -281,7 +284,8 @@ public class OpacClient extends Application {
 			try {
 				Library lib = Library.fromJSON(files[i].replace(".json", ""),
 						new JSONObject(json));
-				libs.add(lib);
+				if(!lib.getApi().equals("test") || sp.getBoolean("test_library", false))
+					libs.add(lib);
 			} catch (JSONException e) {
 				Log.w("JSON library files", "Failed parsing library "
 						+ files[i]);

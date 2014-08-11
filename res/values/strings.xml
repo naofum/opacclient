@@ -263,5 +263,7 @@
     <string name="search_libraries_hint">Bibliothek suchen…</string>
     <string name="action_search">Suchen</string>
     <string name="snooze">Morgen erneut erinnern</string>
+    <string name="setting_test_library">Test-Bibliothek</string>
+    <string name="setting_test_library_desc">Zeigt eine simulierte Bibliothek an, die zum Testen benötigt wird</string>
 
 </resources>
