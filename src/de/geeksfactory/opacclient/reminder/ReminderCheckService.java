@@ -25,11 +25,12 @@ import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.net.SocketException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.acra.ACRA;
 
@@ -45,7 +46,6 @@ import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
-import android.os.Bundle;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
@@ -65,20 +65,30 @@ public class ReminderCheckService extends Service {
 	public static final String ACTION_SNOOZE = "snooze";
 	public static final String ACTION_NOTIFY = "notify";
 
+	public boolean debug_mode = false;
+
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startid) {
-		if(ACTION_SNOOZE.equals(intent.getAction())) {
+		debug_mode = intent.getBooleanExtra("debug_mode", false);
+		SharedPreferences sp = PreferenceManager
+				.getDefaultSharedPreferences(ReminderCheckService.this);
+		notification_on = sp.getBoolean("notification_service", false);
+		long now = System.currentTimeMillis();
+
+		if (ACTION_SNOOZE.equals(intent.getAction())) {
 			// Cancel the notification
 			NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 			mNotificationManager.cancel(OpacClient.NOTIF_ID);
-			
+
 			Intent i = new Intent(ReminderCheckService.this,
 					ReminderCheckService.class);
-			i.setAction(ACTION_NOTIFY);
-			i.putExtra("media", intent.getSerializableExtra("media"));
+			i.putExtra("count", intent.getIntExtra("count", 1));
+			i.putExtra("for", intent.getLongExtra("for", now));
+			if (intent.hasExtra("account"))
+				i.putExtra("account", intent.getLongExtra("account", 1));
 			PendingIntent sender = PendingIntent.getService(
-					ReminderCheckService.this, 0,
-					i, PendingIntent.FLAG_UPDATE_CURRENT);
+					ReminderCheckService.this, 0, i,
+					PendingIntent.FLAG_UPDATE_CURRENT);
 			AlarmManager am = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
 
 			Log.i("ReminderCheckService", "Opac App Service: Snooze");
@@ -86,95 +96,97 @@ public class ReminderCheckService extends Service {
 			am.set(AlarmManager.RTC_WAKEUP, System.currentTimeMillis()
 					+ (1000 * 3600 * 24), sender);
 		} else if (ACTION_NOTIFY.equals(intent.getAction())) {
-			@SuppressWarnings("unchecked")
-			ArrayList<HashMap<String, String>> media = (ArrayList<HashMap<String, String>>) intent.getSerializableExtra("media");
-			SharedPreferences sp = PreferenceManager
-					.getDefaultSharedPreferences(ReminderCheckService.this);
-			notification_on = sp.getBoolean("notification_service", false);
+			int count = intent.getIntExtra("count", 1);
 
-			if (notification_on) {
-				NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+			if (!notification_on)
+				return START_NOT_STICKY;
 
-				NotificationCompat.Builder nb = new NotificationCompat.Builder(
-						ReminderCheckService.this);
-				nb.setContentInfo(getString(R.string.notif_ticker,
-						media.size()));
-				nb.setContentTitle(getString(R.string.notif_title));
-				nb.setContentText(getString(R.string.notif_ticker,
-						media.size()));
-				nb.setTicker(getString(R.string.notif_ticker, media.size()));
-				nb.setSmallIcon(R.drawable.ic_stat_notification);
-				nb.setWhen(Long.parseLong(media.get(0).get(AccountData.KEY_LENT_DEADLINE_TIMESTAMP)));
-				nb.setNumber(media.size());
-				nb.setSound(null);
-				
-				Intent snoozeIntent = new Intent(ReminderCheckService.this, ReminderCheckService.class);
-				snoozeIntent.putExtra("media", media);
-				snoozeIntent.setAction(ACTION_SNOOZE);
-				PendingIntent piSnooze = PendingIntent.getService(ReminderCheckService.this, 0, snoozeIntent, 0);
-				nb.addAction(R.drawable.ic_action_alarms, getResources().getText(R.string.snooze), piSnooze);
-				nb.setDeleteIntent(piSnooze);
+			NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
-				Intent notificationIntent = new Intent(
-						ReminderCheckService.this,
-						((OpacClient) getApplication()).getMainActivity());
-				notificationIntent.putExtra("fragment", "account");
-				notificationIntent.putExtra("media", media);
-//TODO:				notificationIntent.putExtra("notifications", notified);
-//				if (affected_accounts > 1) {
-//					// If there are notifications for more than one account,
-//					// account
-//					// menu should be opened
-//					notificationIntent.putExtra("showmenu", true);
-//				}
-//				notificationIntent.putExtra("account", first_affected_account);
-				PendingIntent contentIntent = PendingIntent.getActivity(
-						ReminderCheckService.this, 0, notificationIntent, 0);
-				nb.setContentIntent(contentIntent);
-				nb.setAutoCancel(true);
+			NotificationCompat.Builder nb = new NotificationCompat.Builder(
+					ReminderCheckService.this);
+			nb.setContentInfo(getString(R.string.notif_ticker, count));
+			nb.setContentTitle(getString(R.string.notif_title));
+			nb.setContentText(getString(R.string.notif_ticker, count));
+			nb.setTicker(getString(R.string.notif_ticker, count));
+			nb.setSmallIcon(R.drawable.ic_stat_notification);
+			nb.setWhen(intent.getLongExtra("for", now));
+			nb.setNumber(count);
+			nb.setSound(null);
 
-				Notification notification = nb.build();
-				mNotificationManager.notify(OpacClient.NOTIF_ID, notification);
+			Intent snoozeIntent = new Intent(ReminderCheckService.this,
+					ReminderCheckService.class);
+			snoozeIntent.putExtra("count", count);
+			snoozeIntent.putExtra("for", intent.getLongExtra("for", now));
+			if (intent.hasExtra("account"))
+				snoozeIntent.putExtra("account",
+						intent.getLongExtra("account", 1));
+			snoozeIntent.setAction(ACTION_SNOOZE);
+			PendingIntent piSnooze = PendingIntent.getService(
+					ReminderCheckService.this, 0, snoozeIntent, 0);
+			nb.addAction(R.drawable.ic_action_alarms,
+					getResources().getText(R.string.snooze), piSnooze);
+			nb.setDeleteIntent(piSnooze);
+
+			Intent notificationIntent = new Intent(ReminderCheckService.this,
+					((OpacClient) getApplication()).getMainActivity());
+			notificationIntent.putExtra("fragment", "account");
+			if (intent.hasExtra("account")) {
+				// If there are notifications for more than one account,
+				// account menu should be opened
+				notificationIntent.putExtra("account",
+						intent.getLongExtra("account", 1));
+			} else {
+				notificationIntent.putExtra("showmenu", true);
 			}
-		} else {	
-			SharedPreferences sp = PreferenceManager
-					.getDefaultSharedPreferences(ReminderCheckService.this);
-			notification_on = sp.getBoolean("notification_service", false);
+			PendingIntent contentIntent = PendingIntent.getActivity(
+					ReminderCheckService.this, 0, notificationIntent, 0);
+			nb.setContentIntent(contentIntent);
+			nb.setAutoCancel(true);
+
+			Notification notification = nb.build();
+			mNotificationManager.notify(OpacClient.NOTIF_ID, notification);
+
+			sp.edit().putLong("notification_last", System.currentTimeMillis())
+					.commit();
+		} else {
 			long waittime = (1000 * 3600 * 5);
 			boolean executed = false;
-	
-			ConnectivityManager connMgr = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-			NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
-			if (networkInfo != null) {
-				if (sp.getBoolean("notification_service_wifionly", false) == false
-						|| networkInfo.getType() == ConnectivityManager.TYPE_WIFI
-						|| networkInfo.getType() == ConnectivityManager.TYPE_ETHERNET) {
-					executed = true;
-					new CheckTask().execute();
+
+			if (notification_on) {
+				// We do not even want to sync, if notification is turned off
+				// (battery and stuff...)
+				ConnectivityManager connMgr = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+				NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
+				if (networkInfo != null) {
+					if (sp.getBoolean("notification_service_wifionly", false) == false
+							|| networkInfo.getType() == ConnectivityManager.TYPE_WIFI
+							|| networkInfo.getType() == ConnectivityManager.TYPE_ETHERNET) {
+						executed = true;
+						new CheckTask().execute();
+					} else {
+						waittime = (1000 * 1800);
+					}
 				} else {
 					waittime = (1000 * 1800);
 				}
 			} else {
-				waittime = (1000 * 1800);
-			}
-	
-			if (!notification_on) {
 				waittime = (1000 * 3600 * 12);
 			}
-	
+
 			Intent i = new Intent(ReminderCheckService.this,
 					ReminderAlarmReceiver.class);
 			PendingIntent sender = PendingIntent.getBroadcast(
-					ReminderCheckService.this, OpacClient.BROADCAST_REMINDER, i,
-					PendingIntent.FLAG_UPDATE_CURRENT);
+					ReminderCheckService.this, OpacClient.BROADCAST_REMINDER,
+					i, PendingIntent.FLAG_UPDATE_CURRENT);
 			AlarmManager am = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-			am.set(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + waittime,
-					sender);
-	
+			am.set(AlarmManager.RTC_WAKEUP, System.currentTimeMillis()
+					+ waittime, sender);
+
 			if (!executed)
 				stopSelf();
 		}
-		
+
 		return START_NOT_STICKY;
 	}
 
@@ -183,19 +195,19 @@ public class ReminderCheckService extends Service {
 		return null;
 	}
 
-	public class CheckTask extends AsyncTask<Object, Object, Object[]> {
+	public class CheckTask extends AsyncTask<Object, Object, Boolean> {
 
 		private boolean exception = false;
 
 		@SuppressLint("UseSparseArrays")
 		@Override
-		protected Object[] doInBackground(Object... params) {
+		protected Boolean doInBackground(Object... params) {
 			AccountDataSource data = new AccountDataSource(
 					ReminderCheckService.this);
 			data.open();
 			List<Account> accounts = data.getAccountsWithPassword();
 			if (accounts.size() == 0)
-				return null;
+				return false;
 
 			Log.i("ReminderCheckService",
 					"Opac App Service: ReminderCheckService started");
@@ -203,18 +215,22 @@ public class ReminderCheckService extends Service {
 			SharedPreferences sp = PreferenceManager
 					.getDefaultSharedPreferences(ReminderCheckService.this);
 
-			long now = new Date().getTime();
+			boolean fail = false;
+			long last_sent = sp.getLong("notification_last", 0);
+			long now = System.currentTimeMillis();
 			long warning = Long.decode(sp.getString("notification_warning",
 					"367200000"));
 			// long warning = 1000 * 3600 * 24 * 90;
-			
-			//Saves times with the list of corresponding expiring books
-			HashMap<Long, ArrayList<HashMap<String, String>>> expiringBooks = new HashMap<Long, ArrayList<HashMap<String, String>>>();
+
+			// Saves times with the list of corresponding expiring books
+			Map<Long, List<Map<String, String>>> expiringBooks = new HashMap<Long, List<Map<String, String>>>();
 
 			OpacClient app = (OpacClient) getApplication();
 			for (Account account : accounts) {
 				Log.i("ReminderCheckService",
 						"Opac App Service: " + account.toString());
+				AccountData res = null;
+
 				try {
 					Library library = app.getLibrary(account.getLibrary());
 					OpacApi api = app.getNewApi(library);
@@ -222,88 +238,120 @@ public class ReminderCheckService extends Service {
 					if (!api.isAccountSupported(library))
 						continue;
 
-					AccountData res = api.account(account);
-
-					if (res == null)
-						continue;
-
-					data.storeCachedAccountData(account, res);
-
-//					int this_account = 0;
-
-					for (Map<String, String> item : res.getLent()) {
-						if (item.containsKey(AccountData.KEY_LENT_DOWNLOAD)) {
-							// Don't remember people of bringing back ebooks,
-							// because ... uhm...
-							if (item.get(AccountData.KEY_LENT_DOWNLOAD)
-									.startsWith("http"))
-								continue;
-						}
-						if (item.containsKey(AccountData.KEY_LENT_DEADLINE_TIMESTAMP)) {
-							long expiring = Long
-									.parseLong(item
-											.get(AccountData.KEY_LENT_DEADLINE_TIMESTAMP));
-							if ((expiring - now) >= warning) {
-								// This book has not expired yet, save it to schedule
-								// a notification for when it expires
-								if(!expiringBooks.containsKey(expiring)) {
-									expiringBooks.put(expiring, new ArrayList<HashMap<String, String>>());
-								}
-								expiringBooks.get(expiring).add(new HashMap<String, String>(item));
-							} else {
-								// This book has already exceeded the notification threshold.
-								// Do nothing, because the user should already have been notified and will
-								// be again if the notification was dismissed or the snooze button pressed
-							}
-						}
+					if ((now - data.getCachedAccountDataTime(account)) < 3600 * 1000 * 2) {
+						// Don't sync this account too often
+						res = data.getCachedAccountData(account);
+					} else {
+						res = api.account(account);
+						data.storeCachedAccountData(account, res);
 					}
-
 				} catch (SocketException e) {
 					e.printStackTrace();
 					exception = true;
+					fail = true;
 				} catch (InterruptedIOException e) {
 					e.printStackTrace();
 					exception = true;
+					fail = true;
 				} catch (IOException e) {
 					e.printStackTrace();
 					exception = true;
+					fail = true;
 				} catch (OpacErrorException e) {
 					e.printStackTrace();
+					fail = true;
 				} catch (Exception e) {
 					ACRA.getErrorReporter().handleException(e);
+					fail = true;
 				}
+
+				if (res == null) {
+					fail = true;
+					res = data.getCachedAccountData(account);
+				}
+
+				// int this_account = 0;
+
+				for (Map<String, String> item : res.getLent()) {
+					if (item.containsKey(AccountData.KEY_LENT_DOWNLOAD)) {
+						// Don't remind people of bringing back ebooks,
+						// because ... uhm...
+						if (item.get(AccountData.KEY_LENT_DOWNLOAD).startsWith(
+								"http"))
+							continue;
+					}
+					if (item.containsKey(AccountData.KEY_LENT_DEADLINE_TIMESTAMP)) {
+						long expiring = Long.parseLong(item
+								.get(AccountData.KEY_LENT_DEADLINE_TIMESTAMP));
+						if (!expiringBooks.containsKey(expiring)) {
+							expiringBooks.put(expiring,
+									new ArrayList<Map<String, String>>());
+						}
+						item.put("account", String.valueOf(account.getId()));
+						expiringBooks.get(expiring).add(item);
+					}
+				}
+
 			}
 			data.close();
-			
-			
-			// Schedule notifications for all the books that haven't expired yet
+
+			// Schedule notifications for all the books that we haven't notified
+			// for already
 			AlarmManager am = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-			
-			// We need to use different request codes so that the PendingIntents aren't overwritten
-			int requestCode = OpacClient.REMINDER_REQ_CODE_MIN;
-			
-			if(!exception) { // TODO: Is this needed to not overwrite the alarms when an account didn't work correctly?
-				for (Entry<Long, ArrayList<HashMap<String, String>>> entry:expiringBooks.entrySet()) {
+
+			for (Entry<Long, List<Map<String, String>>> entry : expiringBooks
+					.entrySet()) {
+				long warningTime = entry.getKey() - warning;
+				if (warningTime > last_sent) {
+					// Ignore expiry dates for which we already _sent_ a
+					// notification
+
+					// We need to use different request codes so that the
+					// PendingIntents won't be overwritten
+					int requestCode = (int) (OpacClient.REMINDER_REQ_CODE_MIN + Math
+							.abs((int) (entry.getKey() / (1000 * 3600 * 12))));
+
+					if (warningTime < now || debug_mode) {
+						// Don't schedule alarms in the past
+						// In debug mode, always alarm now
+						warningTime = now + 1000 * 30;
+					}
+
+					Set<Long> accountsToNotify = new HashSet<Long>();
+					for (Map<String, String> item : entry.getValue()) {
+						if (!accountsToNotify.contains(Long.parseLong(item
+								.get("account"))))
+							accountsToNotify.add(Long.parseLong(item
+									.get("account")));
+					}
+
 					Intent i = new Intent(ReminderCheckService.this,
 							ReminderCheckService.class);
 					i.setAction(ACTION_NOTIFY);
-					i.putExtra("media", entry.getValue());
+					i.putExtra("count", entry.getValue().size());
+					i.putExtra("for", entry.getKey());
+
+					if (accountsToNotify.size() == 1)
+						i.putExtra("account",
+								accountsToNotify.toArray(new Long[] {})[0]);
+
 					PendingIntent sender = PendingIntent.getService(
-							ReminderCheckService.this, requestCode,
-							i, PendingIntent.FLAG_UPDATE_CURRENT);
+							ReminderCheckService.this, requestCode, i,
+							PendingIntent.FLAG_UPDATE_CURRENT);
 					am.cancel(sender);
-					am.set(AlarmManager.RTC_WAKEUP, entry.getKey() - warning, sender);
-					Log.d("opac", entry.getValue().toString());
+					am.set(AlarmManager.RTC_WAKEUP, warningTime, sender);
+					Log.d("ReminderCheckService", entry.getValue().toString());
 				}
 			}
-			
-//			return new Object[] { expired_new, expired_total, notified, first,
-//					affected_accounts, first_affected_account };
-			return null;
+
+			// return new Object[] { expired_new, expired_total, notified,
+			// first,
+			// affected_accounts, first_affected_account };
+			return !fail;
 		}
 
 		@Override
-		protected void onPostExecute(Object[] result) {
+		protected void onPostExecute(Boolean result) {
 			Intent i = new Intent(ReminderCheckService.this,
 					ReminderAlarmReceiver.class);
 			PendingIntent sender = PendingIntent.getBroadcast(
@@ -311,24 +359,12 @@ public class ReminderCheckService extends Service {
 					i, PendingIntent.FLAG_UPDATE_CURRENT);
 			AlarmManager am = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
 
-			if (result == null || exception) {
+			if (!result || exception) {
 				Log.i("ReminderCheckService", "Opac App Service: Quick repeat");
 				// Try again in one hour
 				am.set(AlarmManager.RTC_WAKEUP, System.currentTimeMillis()
 						+ (1000 * 3600), sender);
-				if (result == null)
-					return;
 			}
-
-			long expired_new = (Long) result[0];
-			long expired_total = (Long) result[1];
-			Bundle notified = (Bundle) result[2];
-			long first = (Long) result[3];
-			long affected_accounts = (Long) result[4];
-			long first_affected_account = (Long) result[5];
-
-			if (expired_new == 0)
-				return;
 
 			stopSelf();
 		}

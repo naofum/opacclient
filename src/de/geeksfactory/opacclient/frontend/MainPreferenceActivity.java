@@ -91,9 +91,6 @@ public class MainPreferenceActivity extends OpacPreferenceActivity {
 				adata.invalidateCachedData();
 				adata.notificationClearCache(true);
 				adata.close();
-				Intent i = new Intent(MainPreferenceActivity.this,
-						ReminderCheckService.class);
-				startService(i);
 				return false;
 			}
 		});
@@ -103,6 +100,7 @@ public class MainPreferenceActivity extends OpacPreferenceActivity {
 			@Override
 			public boolean onPreferenceClick(Preference arg0) {
 				Intent i = new Intent(MainPreferenceActivity.this, ReminderCheckService.class);
+				i.putExtra("debug_mode", true);
 				MainPreferenceActivity.this.startService(i);
 				return false;
 			}			
