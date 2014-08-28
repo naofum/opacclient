@@ -62,6 +62,7 @@ import de.geeksfactory.opacclient.apis.SISIS;
 import de.geeksfactory.opacclient.apis.SRU;
 import de.geeksfactory.opacclient.apis.TestApi;
 import de.geeksfactory.opacclient.apis.WebOpacNet;
+import de.geeksfactory.opacclient.apis.WinBiap;
 import de.geeksfactory.opacclient.apis.Zones22;
 import de.geeksfactory.opacclient.frontend.AccountListActivity;
 import de.geeksfactory.opacclient.frontend.MainActivity;
@@ -161,6 +162,8 @@ public class OpacClient extends Application {
 			newApiInstance = new WebOpacNet();
 		else if (lib.getApi().equals("test"))
 			newApiInstance = new TestApi();
+		else if (lib.getApi().equals("winbiap"))
+			newApiInstance = new WinBiap();
 		else
 			return null;
 
