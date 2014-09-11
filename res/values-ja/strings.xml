@@ -1,0 +1,276 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="opac_usernr">ユーザー名</string>
+    <string name="opac_usernr_desc">あなたのアカウントにアクセスするために利用者番号を設定します</string>
+    <string name="opac_password">パスワード</string>
+    <string name="search">目録検索</string>
+    <string name="titel">タイトル</string>
+    <string name="titel_hint">キーワード</string>
+    <string name="verfasser">著者</string>
+    <string name="verfasser_hint">姓, 名</string>
+    <string name="verlag">出版者</string>
+    <string name="zweigstelle">分館</string>
+    <string name="zweigstelleSearch">分館の蔵書</string>
+    <string name="interessenkreis">分類</string>
+    <string name="ISBN">ISBN</string>
+    <string name="barcodes">バーコード</string>
+    <string name="barcode_internal">予約番号.</string>
+    <string name="barcode_internal_not_supported">予約番号の検索はこの図書館ではサポートされていません. ISBN をスキャンしてください.</string>
+    <string name="jahr">出版年</string>
+    <string name="mediengruppe">蔵書グループ</string>
+    <string name="digital">デジタル蔵書のみ</string>
+    <string name="available">利用可能な蔵書のみ</string>
+    <string name="schlag">タグ</string>
+    <string name="systematik">システム</string>
+    <string name="go_search">検索を開始</string>
+    <string name="jahr_von">から</string>
+    <string name="jahr_bis">まで</string>
+    <string name="search_results">検索結果</string>
+    <string name="prefs">設定</string>
+    <string name="account">アカウント</string>
+    <string name="about">Web Opac について</string>
+    <string name="about_summary">このアプリについて</string>
+    <string name="information">情報</string>
+    <string name="changelog">変更履歴</string>
+    <string name="close">閉じる</string>
+    <string name="osl">ライセンス情報</string>
+    <string name="thanks">共同作者と謝辞</string>
+    <string name="developer_settings">開発者設定</string>
+    <string name="details">詳細</string>
+    <string name="copies">所蔵</string>
+    <string name="details_head">詳細</string>
+    <string name="copies_head">所蔵</string>
+    <string name="order">ソート順</string>
+    <string name="ret">返却</string>
+    <string name="res">予約</string>
+    <string name="export">詳細をエクスポート</string>
+    <string name="tocollection">作業を完了</string>
+    <string name="reserve">予約</string>
+    <string name="lendebook">Ebook 貸出</string>
+    <string name="res_zst">分館を選択</string>
+    <string name="doing_res">予約を実行…</string>
+    <string name="opac_error_email">設定画面でメールアドレスを設定してください.</string>
+    <string name="doing_booking">貸出を実行…</string>
+    <string name="status_nouser">このアカウントの利用者番号が設定されていません.</string>
+    <string name="dismiss">ｷｬﾝｾﾙ</string>
+    <string name="loading_account">アカウントのロード中…</string>
+    <string name="pending_fees">取置手数料:</string>
+    <string name="valid_until">利用者証の有効期限:</string>
+    <string name="no_warranty">すべての情報について保証はありません.</string>
+    <string name="entl">貸出</string>
+    <string name="reservations">予約</string>
+    <string name="entl_head">貸出状況</string>
+    <string name="reservations_head">予約状況</string>
+    <string name="entl_none">蔵書の貸出はありません</string>
+    <string name="reservations_none">蔵書の予約はありません</string>
+    <string name="extendall">すべて展開</string>
+    <string name="cancel_confirm">予約をキャンセルしてもよろしいですか?</string>
+    <string name="yes">はい</string>
+    <string name="no">いいえ</string>
+    <string name="cancel">ｷｬﾝｾﾙ</string>
+    <string name="cont">つづく</string>
+    <string name="delete">削除</string>
+    <string name="accept">OK</string>
+    <string name="doing_cancel">予約をキャンセルしています…</string>
+    <string name="doing_prolong">延長しています…</string>
+    <string name="doing_download">ダウンロードしています</string>
+    <string name="reader_needed">電子書籍ファイルを読むには, 例えば Bluefire リーダーのような別のアプリが必要です. すでにそのようなアプリを持っている場合は無視をクリックします. このメッセージは今後表示されません. Google Play で Bluefire Reader をダウンロードするにはダウンロードをクリックします.</string>
+    <string name="reader_needed_ignore">無視</string>
+    <string name="reader_needed_cancel">ｷｬﾝｾﾙ</string>
+    <string name="reader_needed_download">ダウンロード</string>
+    <string name="doing_prolong_all">延長可能な蔵書を延長する…</string>
+    <string name="prolong_all_confirm">本当に（延長可能な）すべての蔵書を延長しますか? いくつかの図書館では一部料金が適用されることがあります.</string>
+    <string name="opac_error">Web-Opac のメッセージ:</string>
+    <string name="welcome">Web Opac にようこそ</string>
+    <string name="welcome_select">最初に、利用する図書館を設定します。</string>
+    <string name="welcome_account">このアカウントは匿名でもかまいません(検索のみの場合). さらに利用者番号およびパスワードを入力することもできます(アカウントの機能を使用する場合). アカウントは後で変更することができます.</string>
+    <string name="select_library">図書館を選択</string>
+
+    <string-array name="orders">
+        <item>標準</item>
+        <item>出版年</item>
+        <item>蔵書グループ</item>
+    </string-array>
+
+    <string name="restart">アプリケーションを再起動</string>
+    <string name="report">レポートを送信</string>
+    <string name="report_sending">レポートを送信中…</string>
+    <string name="report_sent">レポートを送信しました. ありがとうございます!</string>
+    <string name="report_error">レポートを送信できませんでした.</string>
+    <string name="notifications">通知</string>
+    <string name="notification_service">返却期限</string>
+    <string name="notification_service_desc">蔵書を返却する時期に通知します (保証なし)</string>
+    <string name="notification_service_wifionly">WiFi接続のみ</string>
+    <string name="notification_service_wifionly_desc">デバイスは、モバイルデータネットワークを使用している場合は情報を取得しません. またこの間は、警告をしません!</string>
+
+    <string-array name="warning">
+        <item>当日</item>
+        <item>1 日前</item>
+        <item>3 日前</item>
+        <item>1 週間前</item>
+    </string-array>
+    <string-array name="warning_n">
+        <item>86400000</item>
+        <item>172800000</item>
+        <item>259200000</item>
+        <item>604800000</item>
+    </string-array>
+
+    <string name="startup_title">ホーム画面</string>
+    <string name="startup_summary">アプリの開始時にどの画面を表示しますか?</string>
+
+    <string-array name="startup_labels">
+        <item>目録検索</item>
+        <item>アカウント</item>
+        <item>ウィッシュリスト</item>
+        <item>情報</item>
+    </string-array>
+    <string-array name="startup_values">
+        <item>search</item>
+        <item>account</item>
+        <item>starred</item>
+        <item>info</item>
+    </string-array>
+
+    <string name="notification_warning">警告時期</string>
+    <string name="notification_warning_desc">どれくらい前の時期に警告しますか?</string>
+    <string name="notif_ticker">%s 本の返却または更新が必要です!</string>
+    <string name="notif_title">貸出中の本</string>
+    <string name="welcome_assistant">図書館を選択してください</string>
+    <string name="headline">Web Opac</string>
+    <string name="baende">本</string>
+    <string name="baende_volumesearch">版の検索</string>
+    <string name="star">ウィッシュ</string>
+    <string name="starred">蔵書をあなたのウィッシュリストに入れました</string>
+    <string name="star_noid">この図書館では使用できません</string>
+    <string name="star_wait">詳細がロードされるまでしばらくお待ちください!</string>
+    <string name="starred_list">ウィッシュリスト</string>
+    <string name="starred_welcome">これはあなたのウィッシュリストです. 「忘れないで」の星印が蔵書のリストに表示され, 各蔵書の詳細表示で選択できます. リストは使用する図書館ごとに個別に管理されます.</string>
+    <string name="share">共有</string>
+    <string name="share_wait">詳細がロードされるまでしばらくお待ちください</string>
+    <string name="share_notsupported">この図書館ではサポートされていません</string>
+    <string name="unsupported">この機能はサポートされていません</string>
+    <string name="account_unsupported_api">この機能は、この図書館でサポートされていません. これに対応するには, この図書館の読者の助けが必要です. あなたが手助けをしたい場合は info@opacapp.de にサインアップしてください</string>
+    <string name="account_unsupported">この機能は、この図書館でサポートされていません. これに対応するには, この図書館の読者の助けを必要とします： あなたがボタン「レポートを送信」を押すと, 私たちは次のアップデートでそれに対応することができるようになります. 次にあなたのカード番号であなたが本を借りて, その情報を評価させてください （パスワードや、名前などの個人情報は必要ありませｎ！） 責任を持ってデータは削除します.</string>
+    <string name="info">情報</string>
+    <string name="write_mail">メールを作成</string>
+    <string name="info_error">図書館の追加情報が取得できませんでした.</string>
+    <string name="info_unsupported">この図書館は追加の情報を提供していません.</string>
+    <string name="connection_error">失敗</string>
+    <string name="connection_error_detail">図書館サーバーに接続できませんでした. インターネットの接続が利用可能かどうかを確認してください. 図書館サーバーに問題が存在するか, アプリがレスポンスを評価することができませんでした.</string>
+    <string name="connection_error_detail_nre">図書館サーバーに接続できませんでした. インターネットの接続が利用可能かどうかを確認してください. 図書館サーバーに障害が発生している可能性があります.</string>
+    <string name="retry">再試行</string>
+    <string name="default_account_name">アカウントが指定されていません</string>
+    <string name="connecting_initially">図書館サーバーと接続初期化中…</string>
+    <string name="title_activity_account_list">アカウント</string>
+    <string name="account_add">アカウントを追加</string>
+    <string name="accounts">アカウント</string>
+    <string name="account_header">アカウント: %s</string>
+    <string name="accounts_edit">アカウントを編集</string>
+    <string name="accounts_desc">図書館と会員番号を管理します</string>
+    <string name="account_label">名前</string>
+    <string name="account_nr">利用者番号/名 (オプション)</string>
+    <string name="account_password">パスワード (オプション)</string>
+    <string name="account_city">図書館</string>
+    <string name="account_delete_confirm">アカウントを削除してもよろしいですか?</string>
+    <string name="title_activity_account_edit">アカウントを編集</string>
+    <string name="account_select">アカウントを選択</string>
+    <string name="all">すべて</string>
+    <string name="privacy">プライバシーポリシー</string>
+    <string name="nav_hl_library">図書館</string>
+    <string name="nav_search">目録検索</string>
+    <string name="nav_account">アカウント</string>
+    <string name="nav_starred">ウィッシュリスト</string>
+    <string name="nav_info">情報</string>
+    <string name="nav_hl_other">その他</string>
+    <string name="nav_settings">設定</string>
+    <string name="nav_about">このアプリについて</string>
+    <string name="nav_hl_accountlist">アカウントリスト</string>
+    <string name="pagination_next">次へ</string>
+    <string name="pagination_prev">前へ</string>
+    <string name="crash_toast_text">エラーが発生しました. しばらくお待ちください.</string>
+    <string name="crash_notif_ticker_text">Web Opac アプリ: エラーが発生しました.</string>
+    <string name="crash_notif_text">エラーレポートを送信するにはこちらをクリックしてください.</string>
+    <string name="crash_notif_title">Web Opac アプリがクラッシュしました</string>
+    <string name="crash_dialog_text">Opac アプリでエラーが発生しました! 私たちがそれを修正することができるように, メールでバグレポートを送ってください.</string>
+    <string name="refresh">更新</string>
+    <string name="prolong_all">すべて延長</string>
+    <string name="account_no_concurrent">表示が更新されるまで, しばらくお待ちください.</string>
+    <string name="error_connection">接続エラー</string>
+    <string name="confirm_title">確認</string>
+    <string name="confirm">確認</string>
+
+    <plurals name="account_age_minutes">
+        <item quantity="zero">表示されたデータは現在です.</item>
+        <item quantity="one">表示されたデータは 1 分前です.</item>
+        <item quantity="other">表示されたデータは %d 分前です.</item>
+    </plurals>
+    <plurals name="account_age_hours">
+        <item quantity="one">表示されたデータは 1 時間前です.</item>
+        <item quantity="other">表示されたデータは %d 時間前です.</item>
+    </plurals>
+    <plurals name="account_age_days">
+        <item quantity="one">表示されたデータは 1 日前です.</item>
+        <item quantity="other">表示されたデータは %d 日前です.</item>
+    </plurals>
+
+    <string name="search_advanced">拡張検索</string>
+    <string name="search_free">フリー検索</string>
+    <string name="advanced">拡張モード</string>
+    <string name="advanced_desc">追加のあまり使用されない検索フィールドを表示します.</string>
+    <string name="homebranch">現在の分館 (「自分の分館」)</string>
+    <string name="barcode_title">バーコードスキャナーをインストールしますか?</string>
+    <string name="barcode_desc">この機能はバーコードスキャナが必要です. インストールしますか?</string>
+    <string name="barcode_gplay">Google Play</string>
+    <string name="barcode_amazon">Amazon</string>
+    <string name="barcode_no">いいえ</string>
+    <string name="result_number">%d の検索結果</string>
+    <string name="export_starred">エクスポート</string>
+    <string name="geolocate">お住まいの地域で図書館を検索</string>
+    <string name="geolocate_progress">位置の確定中…</string>
+    <string name="geolocate_found">次の図書館: %s</string>
+    <string name="alphabetic_list">すべてのリスト</string>
+    <string name="setting_nfc">NFC の検索</string>
+    <string name="setting_nfc_desc">実験的. わずかのデバイスと図書館のみ.</string>
+    <string name="notification_problems">通知は機能しません</string>
+    <string name="no_results">検索結果はありません.</string>
+    <string name="replacedby">この図書館は現在、拡張された機能を持つ独自の Android アプリが実装されています. 私たちはこの特定のアプリに切り替えることをお勧めします. Google Play のアイコンをクリックしてダウンロードしてください.</string>
+    <string name="email_address">メールアドレス</string>
+    <string name="email_address_description">電子書籍の予約に必要です</string>
+    <string name="accchange_sorry">ここでアカウントの変更はできません.</string>
+    <string name="share_dialog_select">結果を共有</string>
+    <string name="share_link">共有リンク</string>
+    <string name="share_details">詳細をエクスポート</string>
+    <string name="no_ssl">この図書館は安全なHTTPS接続をサポートしていません. あなたが保護されていない公共ネットワークで, アカウントの機能を使用したり, リマインダー機能を有効にした場合, 理論的には, パスワードはネットワーク上の他のユーザーが読み取ることができます.</string>
+    <string name="drawer_open">ナビゲーションを開く</string>
+    <string name="drawer_close">ナビゲーションを閉じる</string>
+    <string name="title_searchresult_list">検索結果</string>
+    <string name="title_searchresult_detail">詳細</string>
+    <string name="title_activity_library_list">図書館選択</string>
+    <string name="action_settings">設定</string>
+    <string name="suggest_library">あなたの図書館がサポートされていませんか? ご連絡ください!</string>
+    <string name="title_activity_suggest_library">図書館の提案</string>
+    <string name="country">国</string>
+    <string name="state">都道府県</string>
+    <string name="city">市区町村</string>
+    <string name="library_name">図書館名</string>
+    <string name="hint_library_name">例えば「公共図書館」, 「大学図書館」, 「ルプレヒトカール大学", …</string>
+    <string name="opac_url">オンライン目録のアドレス</string>
+    <string name="comment">コメント</string>
+    <string name="send">送信</string>
+    <string name="select_mail_app">メールアプリを選択…</string>
+    <string name="search_libraries_hint">図書館を検索…</string>
+    <string name="action_search">検索</string>
+    <string name="snooze">もう一度, 明日忘れないでください</string>
+
+    <string name="setting_cache_leeren">キャッシュをクリア</string>
+    <string name="setting_cache_leeren_desc">モバイル端末上のキャッシュ, メタデータ, などを削除します.</string>
+    <string name="version">バージョン</string>
+    <string name="website">Web サイト</string>
+    <string name="entwickler">開発者</string>
+    <string name="feedback">フィードバック</string>
+    <string name="sonstiges">その他</string>
+    <string name="rate">アプリケーションの評価</string>
+    <string name="source">ソースコード</string>
+</resources>
