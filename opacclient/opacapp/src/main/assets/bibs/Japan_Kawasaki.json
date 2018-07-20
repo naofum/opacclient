@@ -1,0 +1,46 @@
+{
+    "_active": true,
+    "_notice_text": null,
+    "_plus_required": false,
+    "_plus_store_url": null,
+    "_version_required": 0,
+    "account_supported": true,
+    "api": "japanclis", 
+    "city": "川崎市", 
+    "country": "日本", 
+    "data": {
+        "charset": "Shift_JIS",
+        "db": "1",
+        "baseurl": "https://www.library.city.kawasaki.jp",
+        "mediatypes": {
+            "図書資料": "BOOK",
+            "文庫本": "BOOK",
+            "例規集": "BOOK",
+            "和綴資料": "BOOK",
+            "大活字本": "BOOK",
+            "拡大写本": "BOOK",
+            "点字資料": "BOOK",
+            "点字付資料": "BOOK",
+            "絵本": "ART",
+            "特大絵本": "ART",
+            "しかけ絵本": "ART",
+            "紙芝居": "ART",
+            "布の絵本": "ART",
+            "地図（１枚もの）": "BOOK",
+            "マイクロフィルム": "BOOK",
+            "図書その他": "BOOK",
+            "雑誌": "MAGAZINE",
+            "雑誌（点字）": "MAGAZINE",
+            "ＣＤ": "CD",
+            "朗読ＣＤ": "CD"
+        }
+    }, 
+    "geo": [
+        35.5319862, 
+        139.6985403
+    ], 
+    "information": "http://www.library.city.kawasaki.jp/menu_useguide.html",
+    "state": "神奈川県", 
+    "support": "目録検索およびアカウント", 
+    "title": "川崎市立図書館"
+}
