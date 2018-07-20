@@ -23,6 +23,7 @@ import de.geeksfactory.opacclient.apis.BiBer1992;
 import de.geeksfactory.opacclient.apis.Bibliotheca;
 import de.geeksfactory.opacclient.apis.Heidi;
 import de.geeksfactory.opacclient.apis.IOpac;
+import de.geeksfactory.opacclient.apis.JapanClis;
 import de.geeksfactory.opacclient.apis.Littera;
 import de.geeksfactory.opacclient.apis.OpacApi;
 import de.geeksfactory.opacclient.apis.Open;
@@ -129,6 +130,8 @@ public class OpacApiFactory {
             newApiInstance = new Open();
         } else if (lib.getApi().equals("test")) {
             newApiInstance = new TestApi();
+        } else if (lib.getApi().equals("japanclis")) {
+            newApiInstance = new JapanClis();
         } else {
             return null;
         }
